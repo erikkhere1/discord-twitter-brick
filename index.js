@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
 const { TwitterApi } = require('twitter-api-v2');
+const fetch = require('node-fetch');
 
 // === DISCORD SETUP ===
 const discordClient = new Client({
@@ -66,8 +67,8 @@ discordClient.on('messageCreate', async (message) => {
             try {
               // Download image and upload to Twitter
               const response = await fetch(imageUrl);
-              const buffer = await response.arrayBuffer();
-              const mediaId = await rwClient.v1.uploadMedia(Buffer.from(buffer));
+              const buffer = await response.buffer();
+              const mediaId = await rwClient.v1.uploadMedia(buffer);
               mediaIds.push(mediaId);
               console.log(`✅ Image uploaded to Twitter (ID: ${mediaId})`);
             } catch (error) {
