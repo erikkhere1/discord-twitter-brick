@@ -74,7 +74,13 @@ discordClient.on('messageCreate', async (message) => {
               }
               const arrayBuffer = await response.arrayBuffer();
               const buffer = Buffer.from(arrayBuffer);
-              const mediaId = await rwClient.v1.uploadMedia(buffer);
+              
+              // Get the content type from the Discord attachment
+              const attachment = message.attachments.find(att => att.url === imageUrl);
+              const mimeType = attachment ? attachment.contentType : 'image/jpeg';
+              
+              console.log(`📁 Uploading image with type: ${mimeType}`);
+              const mediaId = await rwClient.v1.uploadMedia(buffer, { mimeType });
               mediaIds.push(mediaId);
               console.log(`✅ Image uploaded to Twitter (ID: ${mediaId})`);
             } catch (error) {
