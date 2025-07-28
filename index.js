@@ -48,8 +48,52 @@ discordClient.on('messageCreate', async (message) => {
     console.log(`🧹 Sanitized message: "${sanitized}"`);
 
     try {
-      const tweet = await rwClient.v2.tweet(sanitized);
-      console.log('🐦 Tweet sent successfully:', tweet.data.text);
+      // Check if message has attachments (images)
+      if (message.attachments.size > 0) {
+        console.log(`🖼️  Found ${message.attachments.size} attachment(s)`);
+        
+        // Get image URLs from attachments
+        const imageUrls = message.attachments
+          .filter(attachment => attachment.contentType && attachment.contentType.startsWith('image/'))
+          .map(attachment => attachment.url);
+        
+        if (imageUrls.length > 0) {
+          console.log(`📸 Uploading ${imageUrls.length} image(s) to Twitter...`);
+          
+          // Upload images to Twitter
+          const mediaIds = [];
+          for (const imageUrl of imageUrls) {
+            try {
+              // Download image and upload to Twitter
+              const response = await fetch(imageUrl);
+              const buffer = await response.arrayBuffer();
+              const mediaId = await rwClient.v1.uploadMedia(Buffer.from(buffer));
+              mediaIds.push(mediaId);
+              console.log(`✅ Image uploaded to Twitter (ID: ${mediaId})`);
+            } catch (error) {
+              console.error(`❌ Error uploading image:`, error);
+            }
+          }
+          
+          // Tweet with images
+          if (mediaIds.length > 0) {
+            const tweet = await rwClient.v2.tweet(sanitized, { media: { media_ids: mediaIds } });
+            console.log('🐦 Tweet with images sent successfully:', tweet.data.text);
+          } else {
+            // Fallback to text-only tweet if image upload failed
+            const tweet = await rwClient.v2.tweet(sanitized);
+            console.log('🐦 Text-only tweet sent successfully:', tweet.data.text);
+          }
+        } else {
+          // No valid images, send text-only tweet
+          const tweet = await rwClient.v2.tweet(sanitized);
+          console.log('🐦 Text-only tweet sent successfully:', tweet.data.text);
+        }
+      } else {
+        // No attachments, send text-only tweet
+        const tweet = await rwClient.v2.tweet(sanitized);
+        console.log('🐦 Text-only tweet sent successfully:', tweet.data.text);
+      }
     } catch (error) {
       console.error('❌ Error sending tweet:', error);
     }
