@@ -1,7 +1,6 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
 const { TwitterApi } = require('twitter-api-v2');
-const fetch = require('node-fetch');
 
 // === DISCORD SETUP ===
 const discordClient = new Client({
@@ -11,6 +10,7 @@ const discordClient = new Client({
 discordClient.once('ready', () => {
   console.log(`✅ Logged in as ${discordClient.user.tag}`);
   console.log(`📺 Monitoring channel: ${process.env.DISCORD_CHANNEL_ID}`);
+  console.log(`🚀 Bot is ready and monitoring for $ messages with images!`);
 });
 
 // === TWITTER SETUP ===
@@ -67,7 +67,11 @@ discordClient.on('messageCreate', async (message) => {
             try {
               // Download image and upload to Twitter
               const response = await fetch(imageUrl);
-              const buffer = await response.buffer();
+              if (!response.ok) {
+                throw new Error(`Failed to fetch image: ${response.status}`);
+              }
+              const arrayBuffer = await response.arrayBuffer();
+              const buffer = Buffer.from(arrayBuffer);
               const mediaId = await rwClient.v1.uploadMedia(buffer);
               mediaIds.push(mediaId);
               console.log(`✅ Image uploaded to Twitter (ID: ${mediaId})`);
