@@ -1,3 +1,4 @@
+// Twitter Relay Bot - Fresh Version (v2.0)
 require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
 const { TwitterApi } = require('twitter-api-v2');
@@ -11,6 +12,7 @@ discordClient.once('ready', () => {
   console.log(`✅ Logged in as ${discordClient.user.tag}`);
   console.log(`📺 Monitoring channel: ${process.env.DISCORD_CHANNEL_ID}`);
   console.log(`🚀 Bot is ready and monitoring for $ messages with images!`);
+  console.log(`🔄 Version 2.0 - No node-fetch dependency`);
 });
 
 // === TWITTER SETUP ===
