@@ -2,46 +2,54 @@ require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
 const { TwitterApi } = require('twitter-api-v2');
 
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
+// === DISCORD SETUP ===
+const discordClient = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
 });
 
+discordClient.once('ready', () => {
+  console.log(`✅ Logged in as ${discordClient.user.tag}`);
+});
+
+// === TWITTER SETUP ===
 const twitterClient = new TwitterApi({
-  appKey: process.env.TWITTER_APP_KEY,
-  appSecret: process.env.TWITTER_APP_SECRET,
+  appKey: process.env.TWITTER_API_KEY,
+  appSecret: process.env.TWITTER_API_SECRET,
   accessToken: process.env.TWITTER_ACCESS_TOKEN,
   accessSecret: process.env.TWITTER_ACCESS_SECRET,
 });
 
 const rwClient = twitterClient.readWrite;
 
-client.once('ready', () => {
-  console.log(`✅ Logged in as ${client.user.tag}`);
-});
-
-client.on('messageCreate', async (message) => {
+// === RELAY LOGIC ===
+discordClient.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   const content = message.content;
+  console.log(`📨 Received message: "${content}"`);
 
-  // ✅ Check if message contains either "$" or "@"
-  if (content.includes('$') || content.includes('@')) {
-    // ✅ Remove all "@mentions"
-    const sanitizedContent = content.replace(/@\S+/g, '').trim();
+  // Only tweet if message contains a "$"
+  if (content.includes('$')) {
+    console.log(`💰 Message contains $ symbol - processing...`);
+    
+    // Remove any words that start with "@"
+    const sanitized = content
+      .split(' ')
+      .filter(word => !word.startsWith('@'))
+      .join(' ')
+      .trim();
 
-    if (sanitizedContent.length > 0) {
-      try {
-        await rwClient.v2.tweet(sanitizedContent);
-        console.log(`🐦 Tweeted: ${sanitizedContent}`);
-      } catch (error) {
-        console.error('Tweet failed:', error);
-      }
+    console.log(`🧹 Sanitized message: "${sanitized}"`);
+
+    try {
+      const tweet = await rwClient.v2.tweet(sanitized);
+      console.log('🐦 Tweet sent successfully:', tweet.data.text);
+    } catch (error) {
+      console.error('❌ Error sending tweet:', error);
     }
+  } else {
+    console.log(`⏭️  Message does not contain $ symbol - skipping`);
   }
 });
 
-client.login(process.env.DISCORD_TOKEN);
+discordClient.login(process.env.DISCORD_TOKEN);
