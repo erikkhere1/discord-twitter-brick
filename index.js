@@ -10,8 +10,8 @@ const discordClient = new Client({
 
 discordClient.once('ready', () => {
   console.log(`✅ Logged in as ${discordClient.user.tag}`);
-  console.log(`📺 Monitoring channel: ${process.env.DISCORD_CHANNEL_ID}`);
-  console.log(`🚀 Bot is ready and monitoring for $ messages with images!`);
+  console.log(`📺 Monitoring channel: 796454858760650762`);
+  console.log(`🚀 Bot is ready and monitoring for $ messages from RICK users with images!`);
   console.log(`🔄 Version 2.0 - No node-fetch dependency`);
 });
 
@@ -30,12 +30,21 @@ discordClient.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   // Only process messages from the specified channel
-  if (message.channel.id !== process.env.DISCORD_CHANNEL_ID) {
+  if (message.channel.id !== '796454858760650762') {
+    return;
+  }
+
+  // Check if username contains 'RICK' (case insensitive)
+  const username = message.author.username.toLowerCase();
+  const displayName = message.member?.displayName?.toLowerCase() || '';
+  
+  if (!username.includes('rick') && !displayName.includes('rick')) {
+    console.log(`⏭️  Message not from RICK user - skipping`);
     return;
   }
 
   const content = message.content;
-  console.log(`📨 Received message in target channel: "${content}"`);
+  console.log(`📨 Received message from RICK user in target channel: "${content}"`);
 
   // Only tweet if message contains a "$"
   if (content.includes('$')) {
